@@ -3,7 +3,7 @@ import Imgur from '../imgur/';
 import { Config } from '../../';
 
 import {
-    getImageUrls,
+    getImages,
     getRandomString,
     hasValidImage,
     isFromTargetChannel,
@@ -65,9 +65,9 @@ class Discord {
             isNotFromBot(message, this.botId) &&
             hasValidImage(message, this.config.extensions)
         ) {
-            console.log('Uploading Image');
+            console.log('Upload Image: Request');
 
-            const urls = getImageUrls(message, this.config.extensions);
+            const images = getImages(message, this.config.extensions);
 
             const albums = await this.imgur.getAlbums();
             const album = albums.find(
@@ -75,29 +75,37 @@ class Discord {
             );
 
             if (!album) {
-                console.log(`First Time Setup for ${message.guild.name}`);
-
-                message.channel.send('Looks like this is the first time you\'ve uploaded something on this Discord.');
-                message.channel.send('I\'ll create a new Imgur Album for you, just give me a sec…');
-
-                const newAlbumData = await this.imgur.createAlbum(message.guild.name);
-                const newAlbum = await this.imgur.getAlbum(newAlbumData.id);
-
-                await Promise.all(
-                    urls.map(url => this.imgur.uploadImageToAlbum(url, newAlbum.id))
-                );
-
-                message.channel.send(`OK, done. You can check out your Discord's Album over at <${newAlbum.link}>`)
+                await this.handleAlbumCreation(message, images);
             } else {
-                await Promise.all(
-                    urls.map(url => this.imgur.uploadImageToAlbum(url, album.id))
-                );
-
                 message.channel.send(getRandomString(this.config.replies));
-                message.channel.send(`<${album.link}>`);
-                console.log('Upload Success');
+                await this.handleImagesUpload(message, images, album);
             }
+            console.log('Upload Image: Success');
         }
+    }
+
+    async handleAlbumCreation (message: Message, images: any[]) {
+        console.log(`First Time Setup for ${message.guild.name}`);
+
+        message.channel.send('Looks like this is the first time you\'ve uploaded something on this Discord.');
+        message.channel.send('I\'ll create a new Imgur Album for you, just give me a sec…');
+
+        const newAlbumData = await this.imgur.createAlbum(message.guild.name);
+        const newAlbum = await this.imgur.getAlbum(newAlbumData.id);
+
+        this.handleImagesUpload(message, images, newAlbum);
+    }
+
+    async handleImagesUpload (message: Message, images: any[], album: { id: string, title: string, link: string }) {
+        await Promise.all(
+            images.map(image => this.imgur.uploadImageToAlbum(image.url, album.id))
+        );
+
+        message.channel.send(`Uploaded ${images.length} image${images.length > 1 ? 's' : ''} to <${album.link}>`);
+
+        images.forEach(image => {
+            message.channel.send(`${image.filename}: ${image.height}x${image.width}`);
+        });
     }
 };
 

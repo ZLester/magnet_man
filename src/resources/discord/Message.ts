@@ -27,8 +27,7 @@ const getRandomValue = <T>(arr: T[]): T => arr[getRandomNumber(arr.length)];
 
 export const getRandomString = (strings: string[]) => getRandomValue(strings);
 
-export const getImageUrls = (message: Message, validExtensions: string[]) =>
+export const getImages = (message: Message, validExtensions: string[]) =>
     [ ...message.attachments ]
         .map(([ _, attachment ]) => attachment)
-        .filter(attachment => isValidImage(attachment, validExtensions))
-        .map(attachment => attachment.url);
+        .filter(attachment => isValidImage(attachment, validExtensions));
