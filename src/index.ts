@@ -1,5 +1,17 @@
 import conf from './conf';
-import Bot from './resources/Discord/Bot';
+import Discord from './resources/Discord/';
+import Imgur from './resources/Imgur/';
+
+export type Config = {
+    channel: string,
+    clientId: string,
+    clientSecret: string,
+    extensions: string[],
+    name: string,
+    refreshToken: string,
+    replies: string[],
+    token: string,
+};
 
 const config = {
     name: 'Magnet Man',
@@ -13,10 +25,29 @@ const config = {
     ],
     replies: [
         'This will make a fine addition to my collection!',
-        'Thanks, I hate it.',
         'You are a man of integrity just like me.',
+        'Thanks, I hate it.',
     ],
+    clientId: conf.imgurClientId,
+    clientSecret: conf.imgurClientSecret,
+    refreshToken: conf.imgurRefreshToken,
 };
+
+
+class Bot {
+    config: Config;
+    client: Discord;
+
+    constructor (config: Config) {
+        this.config = config;
+
+        this.client = new Discord(config, new Imgur(config));
+    }
+
+    start () {
+        this.client.start();
+    }
+}
 
 const magnetMan = new Bot(config);
 
