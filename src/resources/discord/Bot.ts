@@ -2,21 +2,25 @@ import discord, { Client, Message, TextChannel } from 'discord.js';
 
 import {
     isFromTargetChannel,
-    isFromBot,
+    isNotFromBot,
     hasValidImage,
+    getRandomString,
 } from './Message';
 
 type Config = {
     token: string,
     name: string,
     channel: string,
+    extensions: string[],
+    replies: string[],
 };
 
-class Discord {
+class Bot {
     client: Client;
     config: Config;
 
-    constructor () {
+    constructor (config: Config) {
+        this.config = config;
         this.client = new discord.Client();
 
         this.handleReady = this.handleReady.bind(this);
@@ -42,9 +46,7 @@ class Discord {
         this.log(`${this.config.name} Status: ${status}`);
     }
 
-    start (config: Config) {
-        this.config = config;
-
+    start () {
         this.logStatus('Starting Up');
 
         this.client.on('ready', this.handleReady);
@@ -52,7 +54,7 @@ class Discord {
         this.client.on('message', this.handleMessage);
         this.client.on('warn', this.handleWarn);
 
-        this.client.login(config.token);
+        this.client.login(this.config.token);
     }
 
     handleReady () {
@@ -72,12 +74,12 @@ class Discord {
     handleMessage (message: Message) {
         if (
             isFromTargetChannel(message, this.targetChannel) &&
-            !isFromBot(message, this.botId) &&
-            hasValidImage(message)
+            isNotFromBot(message, this.botId) &&
+            hasValidImage(message, this.config.extensions)
         ) {
             this.logStatus('Uploading Image');
 
-            message.reply('A Fine Addition to my Collection!');
+            message.channel.send(getRandomString(this.config.replies));
 
             // TODO Upload Image to Imgur Album
 
@@ -86,4 +88,4 @@ class Discord {
     }
 };
 
-export default new Discord();
+export default Bot;
