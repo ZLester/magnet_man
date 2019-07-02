@@ -1,6 +1,6 @@
 import conf from './conf';
-import Discord from './resources/Discord/';
-import Imgur from './resources/Imgur/';
+import Discord from './resources/discord/';
+import Imgur from './resources/imgur/';
 
 export type Config = {
     channel: string,
